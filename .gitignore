@@ -30,7 +30,6 @@ coverage/
 
 # Dossiers de travail et fichiers temporaires
 /work/
-/outputs/
 /processed/
 /images-encodees/
 /tmp/
