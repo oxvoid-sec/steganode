@@ -66,5 +66,6 @@ npm run restore -- -i "C:\photos-recues" -o "C:\donnees\restored.zip"
 - Regles Wikimedia: https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia
 - Limites Gmail (exemple, compte personnel): https://support.google.com/mail/answer/6584?hl=fr
 
-Le dossier `outputs` est ignore par Git: ces centaines de Mo de photos ne seront
-pas ajoutes par un `git add .` ordinaire dans le depot public du projet.
+Les 60 PNG prepares dans `images` sont volontairement versionnes dans Git, avec
+leurs sources et credits. Ils representent environ 418 Mo de photos publiques.
+Les archives ZIP et les PNG encodes dans `processed` restent ignores par Git.

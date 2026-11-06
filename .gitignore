@@ -28,6 +28,9 @@ coverage/
 !/test/fixtures/**/*.png
 !/test/fixtures/**/*.PNG
 
+# Photos publiques preparees pour servir d'images porteuses
+!/outputs/png-mail/images/photo-*.png
+
 # Dossiers de travail et fichiers temporaires
 /work/
 /processed/
