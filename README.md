@@ -1,146 +1,167 @@
 # PNG Image Tools
 
-## Commandes npm
+Utilitaire Node.js pour préparer des lots d’images PNG, consulter leurs informations et restaurer le fichier source associé à un lot.
 
-Les commandes courantes portent des noms neutres orientes traitement d'image:
+Trois commandes permettent de gérer le cycle de traitement : `optimize`, `analyze` et `restore`. Les images sont traitées une par une, avec une progression visible dans le terminal.
 
-```bash
-npm run optimize -- -i archive.zip -c photo1.png photo2.png -o ./processed
-npm run restore -- -i ./processed/carrier-001.steg.png ./processed/carrier-002.steg.png -o restored.zip
-npm run analyze -- -i ./processed/*.steg.png
-```
+## Prérequis
 
-`optimize`, `restore` et `analyze` sont respectivement des alias de `encode`, `decode` et `inspect`. Le mot de passe est demande dans le terminal; il n'est donc pas necessaire de l'inclure dans la commande. Le separateur `--` transmet les options npm au programme.
+- Node.js **22 ou version ultérieure**, notamment Node.js 24.
+- npm, fourni avec Node.js.
+- Des images au format PNG.
 
-Ces noms ne changent pas le fonctionnement: `optimize` effectue l'encodage steganographique, pas une reduction du poids des images. Les noms des fichiers generes, le format public, les messages du moteur et le code source restent explicites; le renommage des commandes ne garantit pas leur discretion. Les commandes historiques `stegzip` restent disponibles.
+## Installation
 
-Pour afficher l'aide: `npm run optimize -- --help`.
-
-## Gros fichiers et progression
-
-Les PNG sont charges et traites un par un. Le ZIP est chiffre et dechiffre par blocs,
-avec un fichier temporaire pour le contenu chiffre. Il n'est jamais charge en entier
-en memoire. Le format reste compatible avec les images generees par la version precedente.
-
-La progression est affichee sur la sortie d'erreur, par etape et par image terminee.
-Le pourcentage porte sur l'etape en cours, pas sur le temps total. Une grande image
-peut prendre plusieurs secondes avant l'affichage du pourcentage suivant.
-Ajoutez `--quiet` pour masquer la progression. La sortie JSON d'`analyze` reste exploitable.
-
-Pour un ZIP de **85 147 Ko (87 190 528 octets)**, comptez **14 PNG de 4096 x 4096**.
-Sous Windows/PowerShell, vous pouvez indiquer directement les dossiers, sans joker:
+Depuis le dossier du projet :
 
 ```powershell
-npm run optimize -- -i "C:\donnees\archive.zip" -c "C:\photos" -o "C:\processed"
-npm run restore -- -i "C:\processed" -o "C:\donnees\restored.zip"
-npm run analyze -- -i "C:\processed"
-```
-
-Un dossier designe tous ses fichiers `.png`, tries par nom, sans parcourir les
-sous-dossiers. Le dossier de restauration doit contenir uniquement le jeu concerne.
-
-Pendant l'encodage, prevoyez environ la taille du ZIP en espace temporaire, en plus
-des PNG de sortie. Pendant le decodage, prevoyez environ deux fois la taille du ZIP
-sur le disque de destination: contenu chiffre et ZIP temporaire en cours de validation.
-Ce ZIP temporaire contient du texte clair avant validation GCM; le fichier final
-n'est publie qu'apres authentification. Les fichiers temporaires sont supprimes en
-cas de succes ou d'erreur geree. Un arret force du processus peut en laisser sur disque.
-
-`stegzip` cache un fichier ZIP dans les bits de poids faible des canaux RGB d'une ou plusieurs images PNG. Le ZIP est d'abord chiffre et authentifie avec **AES-256-GCM**. L'ordre des pixels de chaque image est ensuite melange de facon deterministe a partir du mot de passe, du sel aleatoire et de l'identifiant du jeu d'images.
-
-> La steganographie masque l'existence probable des donnees, mais ne la garantit pas face a une analyse statistique. La confidentialite et l'integrite reposent sur AES-256-GCM et sur la qualite du mot de passe.
-
-## Prerequis et installation
-
-- Node.js 22 ou plus recent (compatibilite verifiee avec Node.js 22.21.1)
-- npm
-
-```bash
-nvm use              # facultatif, si vous utilisez nvm: selectionne Node.js 22
 npm install
-npm link              # facultatif: installe la commande `stegzip`
 ```
 
-Sans `npm link`, remplacez `stegzip` par `node bin/stegzip.js` dans les exemples.
+Pour vérifier les versions disponibles :
 
-## Encoder
-
-```bash
-stegzip encode \
-  --input sauvegarde.zip \
-  --carriers photo1.png photo2.png \
-  --output ./images-encodees
+```powershell
+node --version
+npm --version
 ```
 
-Le programme demande et confirme le mot de passe. Les sorties sont nommees `carrier-001.steg.png`, `carrier-002.steg.png`, etc. Les images originales ne sont jamais modifiees.
+Si vous utilisez nvm, le fichier `.nvmrc` permet de sélectionner Node.js 22 avec `nvm use`.
 
-Pour un script automatise:
+## Démarrage rapide
 
-```bash
-STEGZIP_PASSWORD='une phrase longue et unique' stegzip encode \
-  -i sauvegarde.zip -c photo1.png photo2.png -o ./images-encodees
+Placez vos PNG dans un dossier `photos` et votre fichier source dans `collection.zip`, puis lancez :
+
+```powershell
+npm run optimize -- -i collection.zip -c .\photos -o .\processed
 ```
 
-## Decoder
+Inspectez le lot obtenu :
 
-L'ordre des images sur la ligne de commande n'a pas d'importance:
-
-```bash
-stegzip decode \
-  --input images-encodees/carrier-002.steg.png images-encodees/carrier-001.steg.png \
-  --output sauvegarde-restauree.zip
+```powershell
+npm run analyze -- -i .\processed
 ```
 
-Un mauvais mot de passe, une modification du contenu ou un tag GCM invalide produit l'erreur `authentification impossible: mauvais mot de passe ou donnees corrompues`. Aucun ZIP partiel n'est publie a destination et un fichier de destination existant est preserve en cas d'echec d'authentification.
+Restaurez le fichier associé :
 
-## Inspecter un jeu sans mot de passe
-
-```bash
-stegzip inspect --input images-encodees/*.steg.png
+```powershell
+npm run restore -- -i .\processed -o collection-restauree.zip
 ```
 
-Cette commande affiche uniquement les metadonnees publiques: identifiant du jeu, ordre, dimensions et tailles. Elle ne revele pas le contenu.
+Les exemples utilisent la syntaxe Windows/PowerShell. Sous macOS ou Linux, utilisez des chemins comme `./photos` et `./processed`.
 
-## Capacite
+Le séparateur `--` transmet les options npm à la commande.
 
-Chaque pixel disponible transporte 3 bits (un dans R, G et B). Un en-tete de 104 octets reserve les 278 premiers pixels de chaque image. La capacite approximative d'une image est donc:
+## Préparer un lot avec `optimize`
 
-```text
-floor((largeur * hauteur - 278) * 3 / 8) octets
+La préparation utilise un fichier source au format ZIP et une ou plusieurs images PNG de référence.
+
+### À partir d’un dossier
+
+```powershell
+npm run optimize -- -i "C:\donnees\collection.zip" -c "C:\photos" -o "C:\processed"
 ```
 
-Le chiffrement ajoute 16 octets au ZIP. Si la capacite cumulee est insuffisante, la commande s'arrete avant de creer les images.
+Le programme sélectionne tous les fichiers `.png` du dossier, sans distinction de casse, et les trie par nom. Les sous-dossiers ne sont pas parcourus.
 
-Les PNG de sortie doivent rester **sans perte**. Les convertir en JPEG, les redimensionner, les optimiser avec un outil qui modifie les pixels ou les publier sur un service qui recompresse les images detruira probablement les donnees cachees.
+### À partir d’images sélectionnées
 
-## Format et securite
+```powershell
+npm run optimize -- -i collection.zip -c photo-01.png photo-02.png -o .\processed
+```
 
-- Derivation de cle: `scrypt` (`N=32768`, `r=8`, `p=1`) avec sel aleatoire de 16 octets.
-- Chiffrement: AES-256-GCM, nonce aleatoire de 12 octets, tag de 16 octets.
-- Les metadonnees critiques publiques sont liees au ciphertext comme donnees authentifiees additionnelles (AAD).
-- Chaque image a une permutation de pixels distincte, derivee par HMAC-SHA-256 de la cle, de l'identifiant du jeu et de son index.
-- L'en-tete public possede un CRC32 pour signaler rapidement une corruption. Le CRC n'est pas une protection cryptographique; GCM assure l'authenticite du contenu et des metadonnees liees.
-- La couche alpha n'est jamais modifiee.
+Utilisez cette forme pour limiter le traitement à certaines images.
 
-L'en-tete reste necessairement visible pour retrouver le sel, le nonce, l'ordre des images et les parametres de derivation. Il ne contient ni le mot de passe, ni la cle, ni le contenu du ZIP.
+### Résultat
+
+Le programme vérifie que les dimensions et le nombre d’images permettent de traiter le fichier source. Si le lot est insuffisant, il affiche une erreur avant de créer les images de sortie.
+
+Un mot de passe est demandé et confirmé dans le terminal. Conservez-le pour la restauration du lot.
+
+Une image de sortie est créée pour chaque PNG fourni. Utilisez un dossier de sortie distinct des images de référence et un nouveau dossier pour chaque lot afin d’éviter de mélanger les résultats.
+
+La commande `optimize` prépare le lot ; elle ne garantit pas une réduction du poids des PNG.
+
+## Consulter les informations avec `analyze`
+
+```powershell
+npm run analyze -- -i .\processed
+```
+
+La commande affiche les informations du lot en JSON :
+
+- chemin du fichier et dimensions ;
+- identifiant du lot ;
+- position de l’image et nombre total d’images ;
+- tailles associées au traitement.
+
+L’analyse ne demande pas le mot de passe. Elle s’applique aux lots produits par l’outil.
+
+Pour récupérer uniquement le JSON, sans les messages de lancement de npm :
+
+```powershell
+npm run --silent analyze -- -i .\processed
+```
+
+## Restaurer avec `restore`
+
+```powershell
+npm run restore -- -i "C:\processed" -o "C:\donnees\collection-restauree.zip"
+```
+
+Fournissez toutes les images du même lot et le mot de passe utilisé lors de sa préparation. L’ordre des images n’a pas d’importance : le programme retrouve leur position.
+
+Le dossier d’entrée doit contenir uniquement les PNG du lot concerné. Toutes les images générées sont nécessaires, même si le fichier source était assez petit pour tenir dans une partie du lot.
+
+Le fichier restauré est publié à destination après vérification de son intégrité. Un mot de passe incorrect ou un lot endommagé provoque une erreur ; dans ce cas, un fichier de destination existant est conservé.
+
+## Options
+
+| Option | Rôle |
+| --- | --- |
+| `-i`, `--input` | Fichier source pour `optimize` ; images ou dossier pour `analyze` et `restore`. |
+| `-c`, `--carriers` | Images PNG de référence ou dossier d’images pour `optimize`. |
+| `-o`, `--output` | Dossier de sortie pour `optimize` ; fichier ZIP de destination pour `restore`. |
+| `-p`, `--password` | Mot de passe fourni directement à la commande. |
+| `-q`, `--quiet` | Masquer la progression du traitement. |
+| `-h`, `--help` | Afficher l’aide. |
+
+Pour afficher l’aide :
+
+```powershell
+npm run optimize -- --help
+```
+
+La saisie interactive masque le mot de passe. Évitez de le passer avec `--password` si vous souhaitez qu’il n’apparaisse pas dans l’historique des commandes.
+
+## Progression et ressources
+
+Le terminal affiche la vérification des images, la préparation du fichier, le traitement des PNG et la validation lors de la restauration. Chaque pourcentage correspond à l’étape en cours, pas au temps total restant.
+
+Pour un traitement silencieux :
+
+```powershell
+npm run optimize -- -i collection.zip -c .\photos -o .\processed --quiet
+```
+
+Les PNG sont traités un par un et le fichier source est lu par blocs. La consommation de mémoire dépend surtout des dimensions de la plus grande image et des buffers de traitement.
+
+Prévoyez de l’espace disque pour les PNG produits et les fichiers temporaires : environ la taille du fichier source pendant la préparation, puis environ deux fois cette taille sur le disque de destination pendant la restauration. Les fichiers temporaires sont nettoyés à la fin du traitement ou après une erreur gérée. Un arrêt forcé peut en laisser sur disque.
+
+## Conserver et partager un lot
+
+Conservez les PNG de sortie dans leur format et leurs dimensions d’origine. Une conversion en JPEG, un redimensionnement ou une modification des pixels peut empêcher la restauration.
+
+Pour un transfert par mail, joignez les fichiers en conservant leur taille originale. Les limites d’envoi dépendent du poids réel des PNG et de votre messagerie. Rassemblez toutes les images reçues dans un seul dossier avant d’utiliser `restore`.
 
 ## Tests
 
-```bash
+```powershell
 npm test
 ```
 
-La suite verifie:
+La suite vérifie la préparation et la restauration des lots, les commandes npm, l’intégrité des fichiers, les erreurs de mot de passe, les lots incomplets et le nettoyage des fichiers temporaires.
 
-- l'encodage puis le decodage bit-a-bit sur deux PNG, fournis dans le desordre;
-- le rejet d'un mauvais mot de passe sans creation de fichier;
-- la detection d'un bit corrompu dans le contenu chiffre;
-- la detection d'un en-tete corrompu.
-- la compatibilite avec une image produite par la version precedente;
-- le tag GCM reparti sur deux images, les fragments vides et la progression;
-- la preservation du fichier de destination et le nettoyage temporaire apres echec.
-
-Le test de grand volume est facultatif (14 PNG, plusieurs centaines de Mo de disque):
+Un test de grand volume est disponible séparément. Il nécessite plusieurs centaines de Mo d’espace libre :
 
 ```powershell
 $env:IMAGE_TOOLS_LARGE_TEST = '1'
@@ -148,17 +169,6 @@ npm test
 Remove-Item Env:IMAGE_TOOLS_LARGE_TEST
 ```
 
-Il cree un vrai ZIP de 85 147 Ko et compare les empreintes SHA-256 avant/apres.
+## Licence
 
-Validation effectuee sur macOS avec Node.js 24.18.1: aller-retour complet sur
-14 images de 4096 x 4096, empreintes SHA-256 identiques, environ 95 secondes
-et 636 Mio de memoire residente maximale pour le processus de test. Les images
-porteuses de ce test sont unies; ces chiffres ne sont pas une garantie pour d'autres
-images ou machines. Les tests courts passent aussi sous Node.js 22.21.1.
-Windows et Node.js 24.15.0 n'ont pas ete testes directement.
-
-## Limites pratiques
-
-- La memoire depend surtout de la taille de la plus grande image, avec un fragment chiffre a la fois. La permutation demande environ 4 octets par pixel, en plus du PNG decode (4 octets/pixel) et des buffers de compression/decompression. Pour 4096 x 4096, les pixels et la permutation seuls representent deja 128 Mio. Le pic reel depend aussi de la compression et du ramasse-miettes de Node.js; ce n'est pas une limite stricte de memoire.
-- Toutes les images d'un jeu sont requises, y compris une image dont le fragment est vide.
-- Le nom original du ZIP n'est pas stocke; choisissez le chemin de sortie lors du decodage.
+MIT.
