@@ -1,0 +1,24 @@
+{
+  "name": "png-image-tools",
+  "version": "1.0.0",
+  "description": "CLI Node.js pour cacher un ZIP chiffre AES-256-GCM dans un ou plusieurs PNG",
+  "type": "module",
+  "bin": {
+    "image-tools": "./bin/image-tools.js",
+    "stegzip": "./bin/stegzip.js"
+  },
+  "scripts": {
+    "optimize": "node ./bin/image-tools.js optimize",
+    "restore": "node ./bin/image-tools.js restore",
+    "analyze": "node ./bin/image-tools.js analyze",
+    "test": "node --test",
+    "start": "node ./bin/stegzip.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "pngjs": "^7.0.0"
+  },
+  "license": "MIT"
+}

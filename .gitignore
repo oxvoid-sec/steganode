@@ -1,0 +1,58 @@
+# Dependances et caches Node.js
+node_modules/
+.npm/
+.cache/
+
+# Couverture et rapports de tests
+coverage/
+.nyc_output/
+
+# Configuration locale et secrets
+.env
+.env.*
+!.env.example
+/.npmrc
+
+# Archives et images personnelles (sources ou sorties)
+*.zip
+*.7z
+*.rar
+*.tar
+*.gz
+*.tgz
+*.png
+*.PNG
+
+# Les petits fichiers de reference des tests peuvent etre versionnes
+!/test/fixtures/**/*.zip
+!/test/fixtures/**/*.png
+!/test/fixtures/**/*.PNG
+
+# Dossiers de travail et fichiers temporaires
+/work/
+/outputs/
+/processed/
+/images-encodees/
+/tmp/
+/temp/
+.image-tools-*/
+*.tmp
+*.temp
+
+# Journaux
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editeurs et fichiers systeme (macOS / Windows)
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
